@@ -31,9 +31,9 @@ func New(chans ...interface{}) *Selector {
 }
 
 func (self *Selector) Select() (interface{}, error) {
+	nCases := len(self.cases)
 sel:
 	i := 1
-	nCases := len(self.cases)
 	for i < nCases && self.buffers[i-1] == nil {
 		i++
 	}
