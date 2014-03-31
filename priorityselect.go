@@ -47,7 +47,7 @@ sel:
 	} else { // has buffered value
 		n, v, ok := reflect.Select(self.cases[:i]) // default case at index 0
 		if !ok && n > 0 {
-			return nil, ChanClosedErr{Chan: self.cases[n+1].Chan}
+			return nil, ChanClosedErr{Chan: self.cases[n].Chan}
 		}
 		if n > 0 { // higher priority chan received
 			self.buffers[n-1] = v.Interface()
