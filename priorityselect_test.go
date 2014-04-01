@@ -32,10 +32,48 @@ func TestSelect(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		t.Log(msg)
 		if msg != expect {
 			t.Fatalf("expect:", expect)
 		}
 		time.Sleep(time.Millisecond * 200)
+	}
+}
+
+func TestSelect2(t *testing.T) {
+	c := make(chan int)
+	n := 1024 * 1024
+	go func() {
+		for i := 0; i < n; i++ {
+			c <- i
+		}
+	}()
+	selector := New(c)
+	for i := 0; i < n; i++ {
+		_, err := selector.Select()
+		if err != nil {
+			t.Fail()
+		}
+	}
+}
+
+func TestSelect3(t *testing.T) {
+	nChans := 128
+	nMsgs := 128
+	chans := make([]interface{}, 0)
+	for i := 0; i < nChans; i++ {
+		c := make(chan int)
+		chans = append(chans, c)
+		go func(n int) {
+			for i := 0; i < nMsgs; i++ {
+				c <- n*nChans + i
+			}
+		}(i)
+	}
+	selector := New(chans...)
+	for i := 0; i < nChans*nMsgs; i++ {
+		_, err := selector.Select()
+		if err != nil {
+			t.Fail()
+		}
 	}
 }
