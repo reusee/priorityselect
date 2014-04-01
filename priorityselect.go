@@ -4,7 +4,11 @@ import "reflect"
 
 type Selector struct {
 	cases   []reflect.SelectCase
-	buffers []interface{}
+	buffers []*box
+}
+
+type box struct {
+	v interface{}
 }
 
 type ChanClosedErr struct {
@@ -26,7 +30,7 @@ func New(chans ...interface{}) *Selector {
 			Chan: reflect.ValueOf(c),
 		})
 	}
-	selector.buffers = make([]interface{}, len(chans))
+	selector.buffers = make([]*box, len(chans))
 	return selector
 }
 
@@ -42,7 +46,7 @@ sel:
 		if !ok {
 			return nil, ChanClosedErr{Chan: self.cases[n+1].Chan}
 		}
-		self.buffers[n] = v.Interface()
+		self.buffers[n] = &box{v.Interface()}
 		goto sel
 	} else { // has buffered value
 		n, v, ok := reflect.Select(self.cases[:i]) // default case at index 0
@@ -50,14 +54,14 @@ sel:
 			return nil, ChanClosedErr{Chan: self.cases[n].Chan}
 		}
 		if n > 0 { // higher priority chan received
-			self.buffers[n-1] = v.Interface()
+			self.buffers[n-1] = &box{v.Interface()}
 			goto sel
 		}
 		// default
 		for i, buf := range self.buffers {
 			if buf != nil {
 				self.buffers[i] = nil
-				return buf, nil
+				return buf.v, nil
 			}
 		}
 	}

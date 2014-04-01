@@ -77,3 +77,22 @@ func TestSelect3(t *testing.T) {
 		}
 	}
 }
+
+func BenchmarkSelect(b *testing.B) {
+	nChans := 128
+	chans := make([]interface{}, 0)
+	for i := 0; i < nChans; i++ {
+		c := make(chan bool)
+		chans = append(chans, c)
+		go func() {
+			for {
+				c <- true
+			}
+		}()
+	}
+	selector := New(chans...)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		selector.Select()
+	}
+}
